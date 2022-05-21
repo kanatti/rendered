@@ -1,18 +1,11 @@
-use std::collections::HashMap;
-
-use dom::Node;
+use html::Parser;
 
 mod dom;
+mod html;
 
 fn main() {
-    let text1 = Node::text("text1");
-    let text2 = Node::text("text2");
-    let comment = Node::comment("Just commenting");
-    let div1 = Node::elem(
-        "div",
-        HashMap::from([("class", "data"), ("id", "main")]),
-        vec![comment, text1, text2],
-    );
-
-    div1.pretty_print();
+    let source = "<div> Hello <span class='test' id='id1'>Ok</span></div>";
+    let mut parser =  Parser::new(source.to_string());
+    let dom = parser.parse();
+    dom.pretty_print();
 }

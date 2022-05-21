@@ -1,32 +1,32 @@
 use std::collections::HashMap;
 
-pub struct Node<'a> {
-    children: Vec<Node<'a>>,
-    node_type: NodeType<'a>,
+pub struct Node {
+    children: Vec<Node>,
+    node_type: NodeType,
 }
 
-pub enum NodeType<'a> {
-    Text(&'a str),
-    Element(ElementData<'a>),
-    Comment(&'a str),
+pub enum NodeType {
+    Text(String),
+    Element(ElementData),
+    Comment(String),
 }
 
-pub struct ElementData<'a> {
-    tag_name: &'a str,
-    attributes: AttrMap<'a>,
+pub struct ElementData {
+    tag_name: String,
+    attributes: AttrMap,
 }
 
-pub type AttrMap<'a> = HashMap<&'a str, &'a str>;
+pub type AttrMap = HashMap<String, String>;
 
-impl<'a> Node<'a> {
-    pub fn text(data: &'a str) -> Self {
+impl Node {
+    pub fn text(data: String) -> Self {
         Node {
             children: Vec::new(),
             node_type: NodeType::Text(data),
         }
     }
 
-    pub fn elem(name: &'a str, attrs: AttrMap<'a>, children: Vec<Node<'a>>) -> Self {
+    pub fn elem(name: String, attrs: AttrMap, children: Vec<Node>) -> Self {
         Node {
             children,
             node_type: NodeType::Element(ElementData {
@@ -36,7 +36,7 @@ impl<'a> Node<'a> {
         }
     }
 
-    pub fn comment(data: &'a str) -> Self {
+    pub fn comment(data: String) -> Self {
         Node {
             children: Vec::new(),
             node_type: NodeType::Comment(data),
@@ -61,13 +61,16 @@ fn print_node(node: &Node, level: usize) {
 }
 
 fn print_elem(elem_data: &ElementData, children: &Vec<Node>, level: usize) {
-   leveled(format!("<{} {:?}>", elem_data.tag_name, elem_data.attributes), level);
-   for child in children.iter() {
-       print_node(child, level + 1);
-   }
-  leveled(format!("</{}>", elem_data.tag_name), level);
+    leveled(
+        format!("<{} {:?}>", elem_data.tag_name, elem_data.attributes),
+        level,
+    );
+    for child in children.iter() {
+        print_node(child, level + 1);
+    }
+    leveled(format!("</{}>", elem_data.tag_name), level);
 }
 
 fn leveled(val: String, level: usize) {
-    println!("{:>indent$}", val, indent=PRINT_TAB*level + val.len());
+    println!("{:>indent$}", val, indent = PRINT_TAB * level + val.len());
 }
