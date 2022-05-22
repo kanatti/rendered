@@ -42,11 +42,9 @@ pub enum Unit {
 }
 
 #[derive(Debug)]
-pub struct Color {
-    r: u8,
-    g: u8,
-    b: u8,
-    a: u8,
+pub enum Color {
+    RGBA(u8,u8,u8,u8),
+    HEX(String),
 }
 
 pub struct Parser {
@@ -133,9 +131,38 @@ impl Parser {
     }
 
     fn parse_declarations(&mut self) -> Vec<Declaration> {
-        self.src.consume_while(|c| c != '}');
+        let mut declarations = Vec::new();
+
+        while self.src.peek() != '}' {
+            declarations.push(self.parse_declaration());
+        }
+
         self.src.consume_char();
         self.src.consume_whitespace();
-        vec![]
+        declarations
+    }
+
+    fn parse_declaration(&mut self) -> Declaration {
+        self.src.consume_whitespace();
+        let name = self.consume_identifier();
+        assert!(self.src.consume_char() == ':');
+        self.src.consume_whitespace();
+
+        let raw_value = self.src.consume_while(|c| c != ';');
+
+        let value;
+
+        if raw_value.ends_with("px") {
+            value = Value::Length(raw_value[..raw_value.len()-2].parse::<f32>().unwrap(), Unit::Px);
+        } else if raw_value.starts_with('#') {
+            value = Value::ColorValue(Color::HEX(raw_value[1..].to_string()));
+        } else {
+            value = Value::Keyword(raw_value);
+        }
+
+        assert!(self.src.consume_char() == ';');
+        self.src.consume_whitespace();
+
+        Declaration { name, value }
     }
 }
