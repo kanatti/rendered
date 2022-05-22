@@ -1,47 +1,16 @@
 use std::collections::HashMap;
 
-use crate::dom;
+use crate::{dom, source::Source};
 
 pub struct Parser {
-    pos: usize,
-    input: String,
+    input: Source,
 }
 
 impl Parser {
-    // Read next character without consuming
-    fn peek(&self) -> char {
-        self.input[self.pos..].chars().next().unwrap()
-    }
-
-    fn starts_with(&self, s: &str) -> bool {
-        self.input[self.pos..].starts_with(s)
-    }
-
-    fn eof(&self) -> bool {
-        self.pos >= self.input.len()
-    }
-
-    fn consume_char(&mut self) -> char {
-        let mut iter = self.input[self.pos..].chars();
-        let cur_char = iter.next().unwrap();
-        self.pos += 1;
-        cur_char
-    }
-
-    fn consume_while<F>(&mut self, test: F) -> String
-    where
-        F: Fn(char) -> bool,
-    {
-        let mut result = String::new();
-        while !self.eof() && test(self.peek()) {
-            result.push(self.consume_char());
+    pub fn new(source: String) -> Self {
+        Self {
+            input: Source::new(source),
         }
-
-        result
-    }
-
-    fn consume_whitespace(&mut self) {
-        self.consume_while(char::is_whitespace);
     }
 
     fn parse_tag_name(&mut self) -> String {
@@ -129,7 +98,32 @@ impl Parser {
         }
     }
 
-    pub fn new(source: String) -> Parser {
-        Parser { input: source, pos: 0 }
+    // DELEGATIONS
+
+    fn peek(&self) -> char {
+        self.input.peek()
+    }
+
+    fn starts_with(&self, s: &str) -> bool {
+        self.input.starts_with(s)
+    }
+
+    fn eof(&self) -> bool {
+        self.input.eof()
+    }
+
+    fn consume_char(&mut self) -> char {
+        self.input.consume_char()
+    }
+
+    fn consume_while<F>(&mut self, test: F) -> String
+    where
+        F: Fn(char) -> bool,
+    {
+        self.input.consume_while(test)
+    }
+
+    fn consume_whitespace(&mut self) {
+        self.input.consume_whitespace()
     }
 }
