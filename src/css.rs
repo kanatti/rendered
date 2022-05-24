@@ -2,13 +2,13 @@ use crate::source::Source;
 
 #[derive(Debug)]
 pub struct StyleSheet {
-    rules: Vec<Rule>,
+    pub rules: Vec<Rule>,
 }
 
 #[derive(Debug)]
 pub struct Rule {
-    selectors: Vec<Selector>,
-    declarations: Vec<Declaration>,
+    pub selectors: Vec<Selector>,
+    pub declarations: Vec<Declaration>,
 }
 
 #[derive(Debug)]
@@ -18,33 +18,45 @@ pub enum Selector {
 
 #[derive(Debug)]
 pub struct SimpleSelector {
-    tag_name: Option<String>,
-    id: Option<String>,
-    classes: Vec<String>,
+    pub tag_name: Option<String>,
+    pub id: Option<String>,
+    pub classes: Vec<String>,
 }
 
 #[derive(Debug)]
-struct Declaration {
-    name: String,
-    value: Value,
+pub struct Declaration {
+    pub name: String,
+    pub value: Value,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Value {
     Keyword(String),
     Length(f32, Unit),
     ColorValue(Color),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Unit {
     Px,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Color {
-    RGBA(u8,u8,u8,u8),
+    RGBA(u8, u8, u8, u8),
     HEX(String),
+}
+
+pub type Specificity = (usize, usize, usize);
+
+impl Selector {
+    pub fn specificity(&self) -> Specificity {
+        let Self::Simple(ref simple) = *self;
+        let a = simple.id.iter().count();
+        let b = simple.classes.len();
+        let c = simple.tag_name.iter().count();
+        (a, b, c)
+    }
 }
 
 pub struct Parser {
@@ -86,6 +98,7 @@ impl Parser {
             selectors.push(self.parse_selector());
         }
 
+        selectors.sort_by(|a, b| b.specificity().cmp(&a.specificity()));
         selectors
     }
 
@@ -153,7 +166,10 @@ impl Parser {
         let value;
 
         if raw_value.ends_with("px") {
-            value = Value::Length(raw_value[..raw_value.len()-2].parse::<f32>().unwrap(), Unit::Px);
+            value = Value::Length(
+                raw_value[..raw_value.len() - 2].parse::<f32>().unwrap(),
+                Unit::Px,
+            );
         } else if raw_value.starts_with('#') {
             value = Value::ColorValue(Color::HEX(raw_value[1..].to_string()));
         } else {
