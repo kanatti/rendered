@@ -1,4 +1,4 @@
-use crate::style::{StyledNode, Display};
+use crate::style::{Display, StyledNode};
 
 #[derive(Default)]
 struct Dimensions {
@@ -27,13 +27,13 @@ struct EdgeSizes {
 struct LayoutBox<'a> {
     pub dimensions: Dimensions,
     pub box_type: BoxType<'a>,
-    pub children: Vec<LayoutBox<'a>>
+    pub children: Vec<LayoutBox<'a>>,
 }
 
 enum BoxType<'a> {
-   Block(&'a StyledNode<'a>),
-   Inline(&'a StyledNode<'a>),
-   AnonymousBlock,
+    Block(&'a StyledNode<'a>),
+    Inline(&'a StyledNode<'a>),
+    AnonymousBlock,
 }
 
 fn build_layout_tree<'a>(style_node: &'a StyledNode<'a>) -> LayoutBox<'a> {
@@ -48,7 +48,12 @@ fn build_layout_tree<'a>(style_node: &'a StyledNode<'a>) -> LayoutBox<'a> {
             Display::Block => root.children.push(build_layout_tree(child)),
             Display::Inline => match inline_boxgen(&root) {
                 BoxGen::Root => root.children.push(build_layout_tree(child)),
-                BoxGen::LastChild => root.children.last_mut().unwrap().children.push(build_layout_tree(child)),
+                BoxGen::LastChild => root
+                    .children
+                    .last_mut()
+                    .unwrap()
+                    .children
+                    .push(build_layout_tree(child)),
                 BoxGen::NewBox => {
                     let mut anonymous_block = LayoutBox::new(BoxType::AnonymousBlock);
                     anonymous_block.children.push(build_layout_tree(child));
@@ -71,12 +76,13 @@ enum BoxGen {
 fn inline_boxgen<'a>(layout_box: &'a LayoutBox<'a>) -> BoxGen {
     match layout_box.box_type {
         BoxType::Inline(_) | BoxType::AnonymousBlock => BoxGen::Root,
-        BoxType::Block(_) => {
-            match layout_box.children.last() {
-                Some(&LayoutBox {box_type:BoxType::AnonymousBlock, ..}) => BoxGen::LastChild,
-                _ => BoxGen::NewBox,
-            }
-        }
+        BoxType::Block(_) => match layout_box.children.last() {
+            Some(&LayoutBox {
+                box_type: BoxType::AnonymousBlock,
+                ..
+            }) => BoxGen::LastChild,
+            _ => BoxGen::NewBox,
+        },
     }
 }
 
@@ -89,4 +95,3 @@ impl<'a> LayoutBox<'a> {
         }
     }
 }
-

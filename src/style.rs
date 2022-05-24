@@ -111,8 +111,12 @@ pub fn style_tree<'a>(root: &'a Node, stylesheet: &'a StyleSheet) -> StyledNode<
         node: root,
         css_props: match root.node_type {
             NodeType::Element(ref data) => element_properties(data, stylesheet),
-            _ => HashMap::new()
+            _ => HashMap::new(),
         },
-        children: root.children.iter().map(|child| style_tree(child, stylesheet)).collect(),
+        children: root
+            .children
+            .iter()
+            .map(|child| style_tree(child, stylesheet))
+            .collect(),
     }
 }

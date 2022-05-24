@@ -6,9 +6,9 @@ use indoc::indoc;
 mod css;
 mod dom;
 mod html;
+mod layout;
 mod source;
 mod style;
-mod layout;
 
 fn main() {
     let source = indoc! {
